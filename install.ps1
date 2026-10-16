@@ -22,7 +22,11 @@ try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/$repo/releases/download/$installerTag/install.py" -OutFile $core
     }
-    if ((Get-FileHash -Algorithm SHA256 -LiteralPath $core).Hash.ToLowerInvariant() -ne $coreSHA) { throw 'Installer checksum mismatch.' }
+    $stream = [IO.File]::OpenRead($core)
+    $hasher = [Security.Cryptography.SHA256]::Create()
+    try { $actual = [BitConverter]::ToString($hasher.ComputeHash($stream)).Replace('-','').ToLowerInvariant() }
+    finally { $stream.Dispose(); $hasher.Dispose() }
+    if ($actual -ne $coreSHA) { throw 'Installer checksum mismatch.' }
     $uv = Get-Command uv -ErrorAction SilentlyContinue
     if (-not $uv) {
         $knownUV = Join-Path $env:USERPROFILE '.local/bin/uv.exe'

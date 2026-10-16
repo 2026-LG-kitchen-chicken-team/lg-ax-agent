@@ -7,14 +7,14 @@ engine=codex
 version=product-v0.16.1
 transport=gh
 target=''
-download_only=()
+download_only=no
 while (($#)); do
   case "$1" in
     --engine) engine="${2:?Missing engine}"; shift 2 ;;
     --version) version="${2:?Missing version}"; shift 2 ;;
     --target) target="${2:?Missing target}"; shift 2 ;;
     --transport) transport="${2:?Missing transport}"; shift 2 ;;
-    --download-only) download_only=(--download-only); shift ;;
+    --download-only) download_only=yes; shift ;;
     -h|--help) printf '%s\n' 'LG AX installer: --engine codex|claude --version product-v0.16.1 --target NEW_FOLDER --transport gh|public --download-only'; exit 0 ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
@@ -45,4 +45,5 @@ if ! command -v uv >/dev/null; then
 fi
 args=(--repo "$repo" --version "$version" --engine "$engine" --transport "$transport")
 [[ -z "$target" ]] || args+=(--target "$target")
-uv run --no-project --python 3.12 python "$work/install.py" "${args[@]}" "${download_only[@]}"
+[[ "$download_only" != yes ]] || args+=(--download-only)
+uv run --no-project --python 3.12 python "$work/install.py" "${args[@]}"
